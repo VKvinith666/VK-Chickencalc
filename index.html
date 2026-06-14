@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hub Manager - Poultry Business</title>
+    <title>vk chicken Calc - Hub Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-content { display: none; }
@@ -16,18 +16,50 @@
             .flex-1 { padding: 0 !important; overflow: visible !important; }
             .no-print { display: none !important; }
             .shadow { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
-            #customer-modal { position: absolute; inset: 0; background: white; max-height: none; overflow: visible; }
+            #customer-modal { position: absolute; inset: 0; background: white; max-height: none; overflow: visible; border: none; }
             .bg-black { background: transparent !important; }
+            
+            /* Add branding to the bottom of Full Page prints */
+            body::after {
+                content: "vk chicken Calc by vk_interactives";
+                display: block;
+                text-align: center;
+                font-size: 12px;
+                margin-top: 30px;
+                padding-top: 10px;
+                border-top: 1px solid #ccc;
+                color: #555;
+                font-weight: bold;
+            }
+        }
+
+        /* 80MM POS PRINTER OVERRIDES FOR FULL PAGES */
+        @media print {
+            body.pos-80mm-print {
+                width: 78mm !important;
+                max-width: 78mm !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                font-family: 'Courier New', Courier, monospace !important;
+            }
+            body.pos-80mm-print .p-6, body.pos-80mm-print .p-8 { padding: 5px !important; }
+            body.pos-80mm-print .grid { display: block !important; }
+            body.pos-80mm-print .grid > div { margin-bottom: 10px !important; }
+            body.pos-80mm-print table { width: 100% !important; font-size: 10px !important; word-break: break-word !important; }
+            body.pos-80mm-print th, body.pos-80mm-print td { padding: 2px !important; }
+            body.pos-80mm-print h2 { font-size: 16px !important; text-align: center; }
+            body.pos-80mm-print h3 { font-size: 14px !important; }
         }
     </style>
 </head>
 <body class="bg-gray-100 flex h-screen overflow-hidden text-gray-800">
 
+    <!-- Sidebar with Branding -->
     <div class="sidebar w-64 bg-slate-800 text-white flex flex-col shadow-xl z-10">
-        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
-            <span class="text-2xl font-bold">🐔 Hub</span>
+        <div class="p-5 border-b border-slate-700 flex justify-between items-center">
+            <span class="text-xl font-bold tracking-tight">🐔 vk chicken Calc</span>
             <button onclick="toggleFullScreen()" class="text-gray-300 hover:text-white p-1 rounded transition" title="Toggle Fullscreen">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
             </button>
@@ -38,15 +70,21 @@
             <button onclick="switchTab('customers')" class="w-full text-left p-3 rounded hover:bg-slate-700 focus:bg-blue-600 transition">👥 Customers & Ledger</button>
             <button onclick="switchTab('sales')" class="w-full text-left p-3 rounded hover:bg-slate-700 focus:bg-blue-600 transition">🛒 Outbound (Sales)</button>
         </nav>
-        <div class="p-4 border-t border-slate-700 text-sm text-slate-400">Owner Access Only</div>
+        <!-- Software Creator Tag -->
+        <div class="p-4 border-t border-slate-700 text-center">
+            <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase">Powered By</p>
+            <p class="text-sm font-bold text-blue-400 mt-1">vk_interactives</p>
+        </div>
     </div>
 
+    <!-- Main Content -->
     <div class="flex-1 overflow-y-auto p-8 relative">
 
+        <!-- DASHBOARD TAB -->
         <div id="dashboard" class="tab-content active">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold">Master Dashboard</h2>
-                <button onclick="window.print()" class="no-print bg-slate-800 text-white font-bold py-2 px-4 rounded shadow hover:bg-slate-700 transition">🖨️ Print Dashboard</button>
+                <button onclick="triggerPrint('dashboard')" class="no-print bg-slate-800 text-white font-bold py-2 px-4 rounded shadow hover:bg-slate-700 transition">🖨️ Print Dashboard</button>
             </div>
             
             <div class="grid grid-cols-4 gap-4 mb-8">
@@ -84,6 +122,7 @@
             </div>
         </div>
 
+        <!-- INBOUND TAB -->
         <div id="inbound" class="tab-content">
             <h2 class="text-3xl font-bold mb-6">Log New Batch (Inbound)</h2>
             <div class="bg-white p-6 rounded-lg shadow mb-8">
@@ -105,9 +144,11 @@
             </div>
         </div>
 
+        <!-- CUSTOMERS TAB -->
         <div id="customers" class="tab-content">
             <h2 class="text-3xl font-bold mb-6">Customer Directory & Ledger</h2>
             <div class="grid grid-cols-3 gap-8">
+                <!-- Add Customer -->
                 <div class="col-span-1 bg-white p-6 rounded-lg shadow h-fit border-t-4 border-green-500">
                     <h3 class="font-bold text-lg mb-4 text-gray-700">Register New Buyer</h3>
                     <form onsubmit="addCustomer(event)" class="space-y-4">
@@ -123,6 +164,7 @@
                         <button type="submit" class="w-full bg-green-600 text-white font-bold p-2 rounded shadow hover:bg-green-700 transition">Save Customer</button>
                     </form>
                 </div>
+                <!-- Customer List -->
                 <div class="col-span-2 bg-white rounded-lg shadow overflow-hidden h-fit">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50 border-b">
@@ -139,6 +181,7 @@
             </div>
         </div>
 
+        <!-- SALES TAB -->
         <div id="sales" class="tab-content">
             <h2 class="text-3xl font-bold mb-6">New Sale (Outbound)</h2>
             <div class="bg-white p-8 rounded-lg shadow mb-8 max-w-3xl border-t-4 border-indigo-500">
@@ -170,6 +213,7 @@
 
     </div>
 
+    <!-- CUSTOMER PROFILE MODAL -->
     <div id="customer-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 transition-opacity">
         <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform scale-100 transition-transform">
             
@@ -179,7 +223,7 @@
                         <h2 class="text-3xl font-extrabold text-gray-800" id="modal-c-name">Customer Name</h2>
                         <p class="text-sm text-gray-500 mt-1" id="modal-c-type">Customer Type</p>
                     </div>
-                    <button onclick="printCustomerLedger()" class="no-print ml-6 bg-slate-800 text-white px-4 py-2 rounded font-bold shadow hover:bg-slate-700 transition text-sm">
+                    <button onclick="triggerPrint('ledger')" class="no-print ml-6 bg-slate-800 text-white px-4 py-2 rounded font-bold shadow hover:bg-slate-700 transition text-sm">
                         🖨️ Print Full History
                     </button>
                 </div>
@@ -187,14 +231,9 @@
             </div>
             
             <div class="p-6 overflow-y-auto flex-1 bg-white relative">
-                
                 <div class="absolute top-6 right-6 flex space-x-3 no-print">
-                    <button onclick="depositCash()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700 transition text-sm">
-                        ⬇️ Add Amount (Receive)
-                    </button>
-                    <button onclick="withdrawCash()" class="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition text-sm">
-                        ⬆️ Withdraw (Give)
-                    </button>
+                    <button onclick="depositCash()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700 transition text-sm">⬇️ Add Amount (Receive)</button>
+                    <button onclick="withdrawCash()" class="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition text-sm">⬆️ Withdraw (Give)</button>
                 </div>
 
                 <div class="grid grid-cols-4 gap-4 mb-4 mt-12">
@@ -216,25 +255,6 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-4 mb-8">
-                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                        <p class="text-xs text-indigo-700 uppercase font-semibold">Total Volume Sold</p>
-                        <p id="modal-c-total-kg" class="font-extrabold text-xl text-indigo-700 mt-1">0 Kg</p>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p class="text-xs text-blue-700 uppercase font-semibold">Big Chicken (Kg)</p>
-                        <p id="modal-c-big-kg" class="font-bold text-lg text-blue-700 mt-1">0 Kg</p>
-                    </div>
-                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <p class="text-xs text-purple-700 uppercase font-semibold">Small Chicken (Kg)</p>
-                        <p id="modal-c-small-kg" class="font-bold text-lg text-purple-700 mt-1">0 Kg</p>
-                    </div>
-                    <div id="modal-c-margin-box" class="p-4 rounded-lg border">
-                        <p class="text-xs uppercase font-semibold" id="modal-c-margin-label">Profitability (Margin)</p>
-                        <p id="modal-c-margin" class="font-extrabold text-xl mt-1">0%</p>
-                    </div>
-                </div>
-
                 <h3 class="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Full Purchase & Cash History</h3>
                 <div class="overflow-x-auto rounded border border-gray-200">
                     <table class="w-full text-left">
@@ -249,20 +269,39 @@
                             </tr>
                         </thead>
                         <tbody id="modal-transaction-list" class="divide-y text-gray-700">
-                            </tbody>
+                            <!-- JS injects history here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- PRINT FORMAT SELECTION MODAL (NEW) -->
+    <div id="print-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-[70] transition-opacity no-print">
+        <div class="bg-white p-8 rounded-xl shadow-2xl text-center w-96 border-t-4 border-blue-600">
+            <h3 class="text-2xl font-bold mb-2 text-gray-800">Select Print Size</h3>
+            <p class="text-sm text-gray-500 mb-6">How do you want this to look on paper?</p>
+            
+            <button onclick="executePrint('A4')" class="w-full bg-blue-600 text-white py-3 rounded mb-4 font-bold text-lg shadow-md hover:bg-blue-700 transition flex justify-center items-center">
+                📄 A4 (Standard Printer)
+            </button>
+            <button onclick="executePrint('80mm')" class="w-full bg-slate-800 text-white py-3 rounded mb-4 font-bold text-lg shadow-md hover:bg-slate-900 transition flex justify-center items-center">
+                🧾 80mm (POS Thermal Receipt)
+            </button>
+            
+            <button onclick="closePrintModal()" class="w-full text-red-500 font-semibold mt-2 py-2 hover:bg-red-50 rounded transition">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
     <script>
         let currentViewedCustomer = null;
+        let pendingPrintAction = null; // 'invoice', 'ledger', 'dashboard'
+        let pendingPrintId = null;
 
         let data = JSON.parse(localStorage.getItem('poultryData')) || {
-            batches: [],
-            customers: [],
-            sales: []
+            batches: [], customers: [], sales: []
         };
 
         function saveData() {
@@ -276,18 +315,40 @@
             updateUI();
         }
 
-        // FULLSCREEN LOGIC
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    alert(`Error attempting to enable fullscreen: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen().catch(err => { alert(`Fullscreen Error: ${err.message}`); });
+            } else { if (document.exitFullscreen) document.exitFullscreen(); }
+        }
+
+        // --- NEW PRINT ROUTING ENGINE ---
+        function triggerPrint(action, id = null) {
+            pendingPrintAction = action;
+            pendingPrintId = id;
+            document.getElementById('print-modal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('print-modal').classList.add('hidden');
+            pendingPrintAction = null; pendingPrintId = null;
+        }
+
+        function executePrint(size) {
+            closePrintModal();
+            if (pendingPrintAction === 'invoice') printSingleInvoice(pendingPrintId, size);
+            else printMainPage(size); // ledger or dashboard
+        }
+
+        function printMainPage(size) {
+            if(size === '80mm') {
+                document.body.classList.add('pos-80mm-print');
+                window.print();
+                setTimeout(() => document.body.classList.remove('pos-80mm-print'), 1000);
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
+                window.print();
             }
         }
+        // ---------------------------------
 
         function addBatch(e) {
             e.preventDefault();
@@ -301,17 +362,12 @@
             const initialTotalKg = bigKg + smallKg;
 
             const batch = {
-                id: Date.now(),
-                vendor, landedCost, initialTotalKg, bigKg, smallKg,
+                id: Date.now(), vendor, landedCost, initialTotalKg, bigKg, smallKg,
                 bigPrice: parseFloat(document.getElementById('b-big-price').value) || 0,
                 smallPrice: parseFloat(document.getElementById('b-small-price').value) || 0,
                 revenueGenerated: 0
             };
-            
-            data.batches.push(batch);
-            saveData();
-            e.target.reset();
-            alert("Batch added to Hub successfully!");
+            data.batches.push(batch); saveData(); e.target.reset(); alert("Batch added!");
         }
 
         function addCustomer(e) {
@@ -322,12 +378,9 @@
                 phone: document.getElementById('c-phone').value,
                 address: document.getElementById('c-address').value,
                 type: document.getElementById('c-type').value,
-                lifetimeValue: 0,
-                pendingDues: 0 // Positive = owes us, Negative = advance
+                lifetimeValue: 0, pendingDues: 0
             };
-            data.customers.push(customer);
-            saveData();
-            e.target.reset();
+            data.customers.push(customer); saveData(); e.target.reset();
         }
 
         document.getElementById('s-kg').addEventListener('input', calculateBill);
@@ -358,78 +411,51 @@
             const customer = data.customers.find(c => c.id == customerId);
 
             if(type === 'big') {
-                if(batch.bigKg < kg) return alert("Not enough Big Chicken stock!");
+                if(batch.bigKg < kg) return alert("Not enough Big Chicken!");
                 batch.bigKg -= kg;
             } else {
-                if(batch.smallKg < kg) return alert("Not enough Small Chicken stock!");
+                if(batch.smallKg < kg) return alert("Not enough Small Chicken!");
                 batch.smallKg -= kg;
             }
 
             batch.revenueGenerated += totalBill;
             customer.lifetimeValue += totalBill;
-            
-            // Ledger calculation
-            const newDueFromThisBill = totalBill - paid;
-            customer.pendingDues += newDueFromThisBill;
+            customer.pendingDues += (totalBill - paid);
 
             const newSaleId = Date.now();
             data.sales.push({ 
-                id: newSaleId, 
-                batchId, customerId, type, kg, totalBill, paid, 
-                resultingBalance: customer.pendingDues,
-                isCashTransaction: false
+                id: newSaleId, batchId, customerId, type, kg, totalBill, paid, 
+                resultingBalance: customer.pendingDues, isCashTransaction: false
             });
             
-            saveData();
-            e.target.reset();
+            saveData(); e.target.reset();
             
-            if(confirm("Sale processed successfully! Print invoice?")) {
-                printSingleInvoice(newSaleId);
+            if(confirm("Sale processed! Print invoice now?")) {
+                triggerPrint('invoice', newSaleId);
             }
         }
 
-        // --- NEW WALLET LOGIC ---
         function depositCash() {
             if(!currentViewedCustomer) return;
-            const amountStr = prompt("Enter amount received from customer (Cash Deposit):");
+            const amountStr = prompt("Enter amount received (Cash Deposit):");
             if(amountStr && !isNaN(amountStr)) {
                 const amount = parseFloat(amountStr);
                 const customer = data.customers.find(c => c.id == currentViewedCustomer);
-                
-                customer.pendingDues -= amount; // Decreases what they owe (or adds to advance)
-                
-                // Log it to history
-                data.sales.push({ 
-                    id: Date.now(), batchId: null, customerId: customer.id, 
-                    type: 'Deposit (Received)', kg: 0, totalBill: 0, paid: amount, 
-                    resultingBalance: customer.pendingDues,
-                    isCashTransaction: true
-                });
-
-                saveData();
-                viewCustomerProfile(customer.id); // Refresh modal
+                customer.pendingDues -= amount;
+                data.sales.push({ id: Date.now(), batchId: null, customerId: customer.id, type: 'Deposit (Received)', kg: 0, totalBill: 0, paid: amount, resultingBalance: customer.pendingDues, isCashTransaction: true });
+                saveData(); viewCustomerProfile(customer.id);
             }
         }
 
         function withdrawCash() {
             if(!currentViewedCustomer) return;
-            const amountStr = prompt("Enter amount given back to customer (Refund/Withdrawal):");
+            const amountStr = prompt("Enter amount given back (Refund):");
             if(amountStr && !isNaN(amountStr)) {
                 const amount = parseFloat(amountStr);
                 const customer = data.customers.find(c => c.id == currentViewedCustomer);
-                
-                customer.pendingDues += amount; // Increases what they owe (or lowers advance)
-                
-                // Log it to history
-                data.sales.push({ 
-                    id: Date.now(), batchId: null, customerId: customer.id, 
-                    type: 'Withdrawal (Given)', kg: 0, totalBill: 0, paid: -amount, 
-                    resultingBalance: customer.pendingDues,
-                    isCashTransaction: true
-                });
-
-                saveData();
-                viewCustomerProfile(customer.id); // Refresh modal
+                customer.pendingDues += amount;
+                data.sales.push({ id: Date.now(), batchId: null, customerId: customer.id, type: 'Withdrawal (Given)', kg: 0, totalBill: 0, paid: -amount, resultingBalance: customer.pendingDues, isCashTransaction: true });
+                saveData(); viewCustomerProfile(customer.id);
             }
         }
 
@@ -444,80 +470,30 @@
             document.getElementById('modal-c-address').innerText = customer.address || 'N/A';
             document.getElementById('modal-c-value').innerText = `₹${customer.lifetimeValue.toFixed(2)}`;
 
-            // Wallet Balance Styling
             const balBox = document.getElementById('modal-balance-box');
             const balLabel = document.getElementById('modal-balance-label');
             const balAmt = document.getElementById('modal-c-pending');
             
             if (customer.pendingDues > 0) {
                 balBox.className = 'bg-red-50 p-4 rounded-lg border border-red-200 shadow-inner';
-                balLabel.className = 'text-xs text-red-700 uppercase font-semibold';
-                balLabel.innerText = 'Pending Dues (Owes You)';
-                balAmt.className = 'font-extrabold text-xl text-red-700 mt-1';
-                balAmt.innerText = `₹${customer.pendingDues.toFixed(2)}`;
+                balLabel.className = 'text-xs text-red-700 uppercase font-semibold'; balLabel.innerText = 'Pending Dues (Owes You)';
+                balAmt.className = 'font-extrabold text-xl text-red-700 mt-1'; balAmt.innerText = `₹${customer.pendingDues.toFixed(2)}`;
             } else if (customer.pendingDues < 0) {
                 balBox.className = 'bg-green-50 p-4 rounded-lg border border-green-200 shadow-inner';
-                balLabel.className = 'text-xs text-green-700 uppercase font-semibold';
-                balLabel.innerText = 'Advance Balance (You Owe)';
-                balAmt.className = 'font-extrabold text-xl text-green-700 mt-1';
-                balAmt.innerText = `₹${Math.abs(customer.pendingDues).toFixed(2)}`;
+                balLabel.className = 'text-xs text-green-700 uppercase font-semibold'; balLabel.innerText = 'Advance Balance';
+                balAmt.className = 'font-extrabold text-xl text-green-700 mt-1'; balAmt.innerText = `₹${Math.abs(customer.pendingDues).toFixed(2)}`;
             } else {
                 balBox.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
-                balLabel.className = 'text-xs text-gray-700 uppercase font-semibold';
-                balLabel.innerText = 'Ledger Cleared';
-                balAmt.className = 'font-extrabold text-xl text-gray-700 mt-1';
-                balAmt.innerText = `₹0.00`;
+                balLabel.className = 'text-xs text-gray-700 uppercase font-semibold'; balLabel.innerText = 'Ledger Cleared';
+                balAmt.className = 'font-extrabold text-xl text-gray-700 mt-1'; balAmt.innerText = `₹0.00`;
             }
 
-            let totalKg = 0, bigKg = 0, smallKg = 0, totalCostOfGoods = 0;
             const customerHistory = data.sales.filter(s => s.customerId == customerId);
-            
-            customerHistory.forEach(s => {
-                if(!s.isCashTransaction) {
-                    totalKg += s.kg;
-                    if(s.type === 'big') bigKg += s.kg;
-                    if(s.type === 'small') smallKg += s.kg;
-
-                    const batch = data.batches.find(b => b.id == s.batchId);
-                    if(batch && batch.landedCost > 0) {
-                        const baseTotalKg = batch.initialTotalKg || (batch.bigKg + batch.smallKg + s.kg); 
-                        if(baseTotalKg > 0) {
-                            const costPerKg = batch.landedCost / baseTotalKg;
-                            totalCostOfGoods += (costPerKg * s.kg);
-                        }
-                    }
-                }
-            });
-
-            document.getElementById('modal-c-total-kg').innerText = `${totalKg.toFixed(2)} Kg`;
-            document.getElementById('modal-c-big-kg').innerText = `${bigKg.toFixed(2)} Kg`;
-            document.getElementById('modal-c-small-kg').innerText = `${smallKg.toFixed(2)} Kg`;
-
-            const marginBox = document.getElementById('modal-c-margin-box');
-            const marginLabel = document.getElementById('modal-c-margin-label');
-            const marginEl = document.getElementById('modal-c-margin');
-
-            if(customer.lifetimeValue > 0 && totalCostOfGoods > 0) {
-                const profit = customer.lifetimeValue - totalCostOfGoods;
-                const marginPercentage = (profit / customer.lifetimeValue) * 100;
-                marginEl.innerText = `${marginPercentage.toFixed(1)}%`;
-                if(marginPercentage >= 0) {
-                    marginBox.className = 'bg-green-50 p-4 rounded-lg border border-green-200';
-                    marginLabel.className = 'text-xs text-green-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-green-700 mt-1'; marginLabel.innerText = 'Value (Profit Margin)';
-                } else {
-                    marginBox.className = 'bg-red-50 p-4 rounded-lg border border-red-200 shadow-inner';
-                    marginLabel.className = 'text-xs text-red-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-red-700 mt-1'; marginLabel.innerText = 'Loss (Negative Margin)';
-                }
-            } else {
-                marginEl.innerText = `N/A`;
-                marginBox.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200'; marginLabel.className = 'text-xs text-gray-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-gray-700 mt-1'; marginLabel.innerText = 'Profitability';
-            }
-
             const transList = document.getElementById('modal-transaction-list');
             transList.innerHTML = '';
             
             if(customerHistory.length === 0) {
-                transList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">No purchase history found for this customer.</td></tr>';
+                transList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">No purchase history.</td></tr>';
             } else {
                 customerHistory.sort((a, b) => b.id - a.id).forEach(s => {
                     const d = new Date(s.id);
@@ -529,13 +505,13 @@
                     else ledgerFmt = `<span class="text-gray-500 font-bold">₹0.00</span>`;
 
                     if(s.isCashTransaction) {
-                        const isDeposit = s.paid > 0;
+                        const isDep = s.paid > 0;
                         transList.innerHTML += `
                             <tr class="bg-blue-50 border-b border-blue-100">
                                 <td class="p-3 text-sm whitespace-nowrap text-blue-800">${dateStr}</td>
                                 <td class="p-3 text-sm font-bold text-blue-800">${s.type}</td>
                                 <td class="p-3 text-sm text-blue-800">-</td>
-                                <td class="p-3 text-sm font-bold ${isDeposit ? 'text-green-600' : 'text-red-600'}">${isDeposit ? '+' : '-'} ₹${Math.abs(s.paid).toFixed(2)}</td>
+                                <td class="p-3 text-sm font-bold ${isDep ? 'text-green-600' : 'text-red-600'}">${isDep ? '+' : '-'} ₹${Math.abs(s.paid).toFixed(2)}</td>
                                 <td class="p-3 text-sm text-right">${ledgerFmt}</td>
                                 <td class="p-3 text-center no-print">-</td>
                             </tr>
@@ -549,7 +525,7 @@
                                 <td class="p-3 text-sm font-bold text-gray-700">₹${s.totalBill.toFixed(2)}</td>
                                 <td class="p-3 text-sm text-right">${ledgerFmt}</td>
                                 <td class="p-3 text-center no-print">
-                                    <button onclick="printSingleInvoice(${s.id})" class="text-blue-600 hover:text-blue-800 text-xs border border-blue-300 bg-white px-2 py-1 rounded">Invoice</button>
+                                    <button onclick="triggerPrint('invoice', ${s.id})" class="text-blue-600 hover:text-blue-800 text-xs border border-blue-300 bg-white px-2 py-1 rounded">Print</button>
                                 </td>
                             </tr>
                         `;
@@ -564,22 +540,63 @@
             currentViewedCustomer = null;
         }
 
-        function printSingleInvoice(saleId) {
+        // --- NEW SIZE-AWARE INVOICE PRINTING ---
+        function printSingleInvoice(saleId, size) {
             const sale = data.sales.find(s => s.id == saleId);
             if(!sale || sale.isCashTransaction) return;
             const customer = data.customers.find(c => c.id == sale.customerId);
             const dateStr = new Date(sale.id).toLocaleString();
 
             let ledgerStr = '';
-            if(customer.pendingDues > 0) ledgerStr = `Total Outstanding Dues: <span style="color:red;">₹${customer.pendingDues.toFixed(2)}</span>`;
-            else if(customer.pendingDues < 0) ledgerStr = `Total Advance Balance: <span style="color:green;">₹${Math.abs(customer.pendingDues).toFixed(2)}</span>`;
-            else ledgerStr = `Ledger Balance: ₹0.00`;
+            if(customer.pendingDues > 0) ledgerStr = `Outstanding Dues: Rs.${customer.pendingDues.toFixed(2)}`;
+            else if(customer.pendingDues < 0) ledgerStr = `Advance Balance: Rs.${Math.abs(customer.pendingDues).toFixed(2)}`;
+            else ledgerStr = `Ledger Balance: Rs.0.00`;
 
             const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write(`
-                <html><head><title>Invoice - ${customer.name}</title>
+            
+            if(size === '80mm') {
+                // THERMAL RECEIPT LAYOUT
+                printWindow.document.write(`
+                    <html><head><title>Receipt</title>
                     <style>
-                        body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                        @page { margin: 0; }
+                        body { width: 78mm; padding: 5mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000; }
+                        h1 { font-size: 16px; text-align: center; margin: 0 0 10px 0; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+                        .row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+                        .dashed-line { border-top: 1px dashed #000; margin: 10px 0; }
+                        .text-center { text-align: center; }
+                        .bold { font-weight: bold; }
+                        .footer { text-align: center; font-size: 10px; margin-top: 20px; border-top: 1px dashed #000; padding-top: 5px; }
+                    </style>
+                    </head><body>
+                        <h1>vk chicken Calc</h1>
+                        <div class="row"><span>Date:</span><span>${dateStr.split(',')[0]}</span></div>
+                        <div class="row"><span>To:</span><span class="bold">${customer.name}</span></div>
+                        <div class="row"><span>Ph:</span><span>${customer.phone}</span></div>
+                        
+                        <div class="dashed-line"></div>
+                        <div class="row bold"><span>Item</span><span>Amount</span></div>
+                        <div class="row"><span>${sale.kg}kg ${sale.type} Ckn</span><span>Rs.${sale.totalBill.toFixed(2)}</span></div>
+                        
+                        <div class="dashed-line"></div>
+                        <div class="row"><span>Total:</span><span class="bold">Rs.${sale.totalBill.toFixed(2)}</span></div>
+                        <div class="row"><span>Paid Spot:</span><span>Rs.${sale.paid.toFixed(2)}</span></div>
+                        
+                        <div class="dashed-line"></div>
+                        <div class="text-center bold" style="margin-top:10px;">${ledgerStr}</div>
+                        
+                        <div class="footer">
+                            Thank you for your business!<br>
+                            vk chicken Calc by vk_interactives
+                        </div>
+                    </body></html>
+                `);
+            } else {
+                // A4 STANDARD LAYOUT
+                printWindow.document.write(`
+                    <html><head><title>Invoice - ${customer.name}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: auto; }
                         h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
                         .info-box { margin-bottom: 30px; line-height: 1.6; }
                         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -587,44 +604,41 @@
                         th { background-color: #f8f9fa; }
                         .totals { margin-top: 30px; font-size: 1.1em; text-align: right; }
                         .bold { font-weight: bold; }
+                        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 15px; }
                     </style>
-                </head><body>
-                    <h1>POULTRY HUB - SALE INVOICE</h1>
-                    <div class="info-box">
-                        <p><strong>Date:</strong> ${dateStr}</p>
-                        <p><strong>Customer Name:</strong> ${customer.name}</p>
-                        <p><strong>Phone:</strong> ${customer.phone}</p>
-                    </div>
-                    <table>
-                        <thead><tr><th>Item Description</th><th>Weight (Kg)</th><th>Amount</th></tr></thead>
-                        <tbody><tr><td style="text-transform: capitalize;">${sale.type} Chicken</td><td>${sale.kg}</td><td>₹${sale.totalBill.toFixed(2)}</td></tr></tbody>
-                    </table>
-                    <div class="totals">
-                        <p>Total Bill: <span class="bold">₹${sale.totalBill.toFixed(2)}</span></p>
-                        <p>Paid On Spot: <span class="bold" style="color: green;">₹${sale.paid.toFixed(2)}</span></p>
-                        <hr style="width: 30%; float: right; border: 1px solid #ccc;"><div style="clear:both;"></div>
-                        <br><p><strong>${ledgerStr}</strong></p>
-                    </div>
-                    <p style="margin-top: 50px; text-align: center; color: #777;">Thank you for your business!</p>
-                </body></html>
-            `);
+                    </head><body>
+                        <h1>vk chicken Calc - INVOICE</h1>
+                        <div class="info-box">
+                            <p><strong>Date:</strong> ${dateStr}</p>
+                            <p><strong>Customer Name:</strong> ${customer.name}</p>
+                            <p><strong>Phone:</strong> ${customer.phone}</p>
+                        </div>
+                        <table>
+                            <thead><tr><th>Item Description</th><th>Weight (Kg)</th><th>Amount</th></tr></thead>
+                            <tbody><tr><td style="text-transform: capitalize;">${sale.type} Chicken</td><td>${sale.kg}</td><td>₹${sale.totalBill.toFixed(2)}</td></tr></tbody>
+                        </table>
+                        <div class="totals">
+                            <p>Total Bill: <span class="bold">₹${sale.totalBill.toFixed(2)}</span></p>
+                            <p>Paid On Spot: <span class="bold" style="color: green;">₹${sale.paid.toFixed(2)}</span></p>
+                            <hr style="width: 30%; float: right; border: 1px solid #ccc;"><div style="clear:both;"></div>
+                            <br><p><strong>${ledgerStr.replace('Rs.', '₹')}</strong></p>
+                        </div>
+                        <div class="footer">
+                            <p>Thank you for your business!</p>
+                            <p style="margin-top: 5px; font-weight: bold; color: #555;">vk chicken Calc by vk_interactives</p>
+                        </div>
+                    </body></html>
+                `);
+            }
             printWindow.document.close();
             setTimeout(() => printWindow.print(), 250);
         }
 
-        function printCustomerLedger() { window.print(); }
-
         function updateUI() {
             let totalBig = 0, totalSmall = 0, totalCash = 0, totalPending = 0;
-            
             data.batches.forEach(b => { totalBig += b.bigKg; totalSmall += b.smallKg; });
-            
-            // Only sum up actual sales cash for the daily dashboard, ignore wallet deposits to prevent confusion
             data.sales.forEach(s => { if(!s.isCashTransaction) totalCash += s.paid; });
-            
-            data.customers.forEach(c => { 
-                if(c.pendingDues > 0) totalPending += c.pendingDues; // Only sum positive debts for market outstanding
-            });
+            data.customers.forEach(c => { if(c.pendingDues > 0) totalPending += c.pendingDues; });
 
             document.getElementById('dash-big-stock').innerText = totalBig.toFixed(2) + ' Kg';
             document.getElementById('dash-small-stock').innerText = totalSmall.toFixed(2) + ' Kg';
@@ -650,7 +664,7 @@
             data.customers.forEach(c => {
                 let statusBadge = '';
                 if(c.pendingDues > 0) statusBadge = `<span class="text-red-600 font-extrabold">Owes: ₹${c.pendingDues.toFixed(2)}</span>`;
-                else if(c.pendingDues < 0) statusBadge = `<span class="text-green-600 font-extrabold">Advance: ₹${Math.abs(c.pendingDues).toFixed(2)}</span>`;
+                else if(c.pendingDues < 0) statusBadge = `<span class="text-green-600 font-extrabold">Adv: ₹${Math.abs(c.pendingDues).toFixed(2)}</span>`;
                 else statusBadge = `<span class="text-gray-500 font-bold">₹0.00</span>`;
 
                 custList.innerHTML += `
@@ -666,15 +680,11 @@
 
             const batchSelect = document.getElementById('s-batch');
             batchSelect.innerHTML = '<option value="" disabled selected>Select an active batch</option>';
-            data.batches.forEach(b => {
-                batchSelect.innerHTML += `<option value="${b.id}">${b.vendor} (Big: ${b.bigKg}kg, Small: ${b.smallKg}kg left)</option>`;
-            });
+            data.batches.forEach(b => { batchSelect.innerHTML += `<option value="${b.id}">${b.vendor} (Big: ${b.bigKg}kg, Small: ${b.smallKg}kg left)</option>`; });
 
             const custSelect = document.getElementById('s-customer');
             custSelect.innerHTML = '<option value="" disabled selected>Select a customer</option>';
-            data.customers.forEach(c => {
-                custSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.type})</option>`;
-            });
+            data.customers.forEach(c => { custSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.type})</option>`; });
         }
 
         updateUI();
