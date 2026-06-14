@@ -9,12 +9,12 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* MAGIC PRINT CSS: This formats the page perfectly for A4 paper when you hit Print */
+        /* MAGIC PRINT CSS */
         @media print {
             body { background-color: white !important; color: black !important; }
-            .sidebar { display: none !important; } /* Hide the dark menu */
+            .sidebar { display: none !important; }
             .flex-1 { padding: 0 !important; overflow: visible !important; }
-            .no-print { display: none !important; } /* Hide buttons you don't want on paper */
+            .no-print { display: none !important; }
             .shadow { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
             #customer-modal { position: absolute; inset: 0; background: white; max-height: none; overflow: visible; }
             .bg-black { background: transparent !important; }
@@ -24,7 +24,14 @@
 <body class="bg-gray-100 flex h-screen overflow-hidden text-gray-800">
 
     <div class="sidebar w-64 bg-slate-800 text-white flex flex-col shadow-xl z-10">
-        <div class="p-6 text-2xl font-bold border-b border-slate-700">🐔 Hub Manager</div>
+        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+            <span class="text-2xl font-bold">🐔 Hub</span>
+            <button onclick="toggleFullScreen()" class="text-gray-300 hover:text-white p-1 rounded transition" title="Toggle Fullscreen">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+            </button>
+        </div>
         <nav class="flex-1 p-4 space-y-2">
             <button onclick="switchTab('dashboard')" class="w-full text-left p-3 rounded hover:bg-slate-700 focus:bg-blue-600 transition">📊 Dashboard</button>
             <button onclick="switchTab('inbound')" class="w-full text-left p-3 rounded hover:bg-slate-700 focus:bg-blue-600 transition">🚛 Inbound (Batches)</button>
@@ -39,7 +46,7 @@
         <div id="dashboard" class="tab-content active">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold">Master Dashboard</h2>
-                <button onclick="window.print()" class="no-print bg-slate-800 text-white font-bold py-2 px-4 rounded shadow hover:bg-slate-700 transition">🖨️ Print Dashboard Report</button>
+                <button onclick="window.print()" class="no-print bg-slate-800 text-white font-bold py-2 px-4 rounded shadow hover:bg-slate-700 transition">🖨️ Print Dashboard</button>
             </div>
             
             <div class="grid grid-cols-4 gap-4 mb-8">
@@ -122,8 +129,8 @@
                             <tr>
                                 <th class="p-4 text-sm text-gray-600">Name</th>
                                 <th class="p-4 text-sm text-gray-600">Type</th>
-                                <th class="p-4 text-sm text-gray-600 text-right">Pending Dues</th>
-                                <th class="p-4 text-sm text-gray-600 text-center">Actions</th>
+                                <th class="p-4 text-sm text-gray-600 text-right">Ledger Balance</th>
+                                <th class="p-4 text-sm text-gray-600 text-center">Profile</th>
                             </tr>
                         </thead>
                         <tbody id="customer-list" class="divide-y"></tbody>
@@ -179,9 +186,18 @@
                 <button onclick="closeModal()" class="no-print text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition font-bold text-2xl leading-none">&times;</button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-1 bg-white">
+            <div class="p-6 overflow-y-auto flex-1 bg-white relative">
                 
-                <div class="grid grid-cols-4 gap-4 mb-4">
+                <div class="absolute top-6 right-6 flex space-x-3 no-print">
+                    <button onclick="depositCash()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700 transition text-sm">
+                        ⬇️ Add Amount (Receive)
+                    </button>
+                    <button onclick="withdrawCash()" class="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition text-sm">
+                        ⬆️ Withdraw (Give)
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4 mb-4 mt-12">
                     <div class="bg-gray-50 p-4 rounded-lg border">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Phone</p>
                         <p id="modal-c-phone" class="font-bold text-gray-800 mt-1">-</p>
@@ -194,9 +210,9 @@
                         <p class="text-xs text-green-700 uppercase font-semibold">Total Revenue</p>
                         <p id="modal-c-value" class="font-extrabold text-xl text-green-700 mt-1">₹0</p>
                     </div>
-                    <div class="bg-red-50 p-4 rounded-lg border border-red-200 shadow-inner">
-                        <p class="text-xs text-red-700 uppercase font-semibold">Current Pending Dues</p>
-                        <p id="modal-c-pending" class="font-extrabold text-xl text-red-700 mt-1">₹0</p>
+                    <div id="modal-balance-box" class="p-4 rounded-lg border shadow-inner">
+                        <p id="modal-balance-label" class="text-xs uppercase font-semibold">Ledger Balance</p>
+                        <p id="modal-c-pending" class="font-extrabold text-xl mt-1">₹0</p>
                     </div>
                 </div>
 
@@ -219,18 +235,17 @@
                     </div>
                 </div>
 
-                <h3 class="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Full Purchase History</h3>
+                <h3 class="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Full Purchase & Cash History</h3>
                 <div class="overflow-x-auto rounded border border-gray-200">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="p-3 text-sm font-semibold text-gray-600">Date & Time</th>
-                                <th class="p-3 text-sm font-semibold text-gray-600">Type</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Transaction Type</th>
                                 <th class="p-3 text-sm font-semibold text-gray-600">Weight</th>
-                                <th class="p-3 text-sm font-semibold text-gray-600">Total Bill</th>
-                                <th class="p-3 text-sm font-semibold text-gray-600">Paid On Spot</th>
-                                <th class="p-3 text-sm font-semibold text-gray-600">Left Pending</th>
-                                <th class="p-3 text-sm font-semibold text-gray-600 text-center no-print">Action</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Bill / Cash</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600 text-right">Ledger After</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600 text-center no-print">Invoice</th>
                             </tr>
                         </thead>
                         <tbody id="modal-transaction-list" class="divide-y text-gray-700">
@@ -242,7 +257,6 @@
     </div>
 
     <script>
-        // Global variables for printing context
         let currentViewedCustomer = null;
 
         let data = JSON.parse(localStorage.getItem('poultryData')) || {
@@ -262,11 +276,22 @@
             updateUI();
         }
 
-        // Add Batch (Now handles optional fields gracefully)
+        // FULLSCREEN LOGIC
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
         function addBatch(e) {
             e.preventDefault();
             const vendor = document.getElementById('b-vendor').value;
-            // The || 0 means if it's blank/NaN, it defaults to 0
             const cost = parseFloat(document.getElementById('b-cost').value) || 0;
             const transport = parseFloat(document.getElementById('b-transport').value) || 0;
             const landedCost = cost + transport;
@@ -277,12 +302,8 @@
 
             const batch = {
                 id: Date.now(),
-                vendor, 
-                landedCost,
-                initialTotalKg, 
-                bigKg,
+                vendor, landedCost, initialTotalKg, bigKg, smallKg,
                 bigPrice: parseFloat(document.getElementById('b-big-price').value) || 0,
-                smallKg,
                 smallPrice: parseFloat(document.getElementById('b-small-price').value) || 0,
                 revenueGenerated: 0
             };
@@ -293,7 +314,6 @@
             alert("Batch added to Hub successfully!");
         }
 
-        // Add Customer
         function addCustomer(e) {
             e.preventDefault();
             const customer = {
@@ -303,14 +323,13 @@
                 address: document.getElementById('c-address').value,
                 type: document.getElementById('c-type').value,
                 lifetimeValue: 0,
-                pendingDues: 0
+                pendingDues: 0 // Positive = owes us, Negative = advance
             };
             data.customers.push(customer);
             saveData();
             e.target.reset();
         }
 
-        // Auto-calculate bill
         document.getElementById('s-kg').addEventListener('input', calculateBill);
         document.getElementById('s-type').addEventListener('change', calculateBill);
         document.getElementById('s-batch').addEventListener('change', calculateBill);
@@ -319,7 +338,6 @@
             const batchId = document.getElementById('s-batch').value;
             const type = document.getElementById('s-type').value;
             const kg = parseFloat(document.getElementById('s-kg').value) || 0;
-            
             const batch = data.batches.find(b => b.id == batchId);
             if(batch) {
                 const price = type === 'big' ? batch.bigPrice : batch.smallPrice;
@@ -327,7 +345,6 @@
             }
         }
 
-        // Process Sale
         function processSale(e) {
             e.preventDefault();
             const batchId = document.getElementById('s-batch').value;
@@ -336,89 +353,138 @@
             const kg = parseFloat(document.getElementById('s-kg').value);
             const totalBill = parseFloat(document.getElementById('s-total').value);
             const paid = parseFloat(document.getElementById('s-paid').value);
-            const pending = totalBill - paid;
-
+            
             const batch = data.batches.find(b => b.id == batchId);
             const customer = data.customers.find(c => c.id == customerId);
 
             if(type === 'big') {
-                if(batch.bigKg < kg) return alert("Not enough Big Chicken stock in this batch!");
+                if(batch.bigKg < kg) return alert("Not enough Big Chicken stock!");
                 batch.bigKg -= kg;
             } else {
-                if(batch.smallKg < kg) return alert("Not enough Small Chicken stock in this batch!");
+                if(batch.smallKg < kg) return alert("Not enough Small Chicken stock!");
                 batch.smallKg -= kg;
             }
 
             batch.revenueGenerated += totalBill;
             customer.lifetimeValue += totalBill;
-            customer.pendingDues += pending;
+            
+            // Ledger calculation
+            const newDueFromThisBill = totalBill - paid;
+            customer.pendingDues += newDueFromThisBill;
 
             const newSaleId = Date.now();
             data.sales.push({ 
                 id: newSaleId, 
-                batchId, 
-                customerId, 
-                type, 
-                kg, 
-                totalBill, 
-                paid, 
-                pending,
-                dateObj: new Date().toISOString()
+                batchId, customerId, type, kg, totalBill, paid, 
+                resultingBalance: customer.pendingDues,
+                isCashTransaction: false
             });
             
             saveData();
             e.target.reset();
             
-            // Ask if they want to print the invoice right away
-            if(confirm("Sale processed successfully! Do you want to print the invoice now?")) {
+            if(confirm("Sale processed successfully! Print invoice?")) {
                 printSingleInvoice(newSaleId);
             }
         }
 
-        // Settle Dues
-        function settleDues(customerId) {
-            const amount = prompt("Enter cash amount received to clear dues:");
-            if(amount && !isNaN(amount)) {
-                const customer = data.customers.find(c => c.id == customerId);
-                customer.pendingDues -= parseFloat(amount);
-                if(customer.pendingDues < 0) customer.pendingDues = 0;
-                saveData();
+        // --- NEW WALLET LOGIC ---
+        function depositCash() {
+            if(!currentViewedCustomer) return;
+            const amountStr = prompt("Enter amount received from customer (Cash Deposit):");
+            if(amountStr && !isNaN(amountStr)) {
+                const amount = parseFloat(amountStr);
+                const customer = data.customers.find(c => c.id == currentViewedCustomer);
                 
-                // If modal is open, refresh it
-                if(currentViewedCustomer == customerId) {
-                    viewCustomerProfile(customerId);
-                }
+                customer.pendingDues -= amount; // Decreases what they owe (or adds to advance)
+                
+                // Log it to history
+                data.sales.push({ 
+                    id: Date.now(), batchId: null, customerId: customer.id, 
+                    type: 'Deposit (Received)', kg: 0, totalBill: 0, paid: amount, 
+                    resultingBalance: customer.pendingDues,
+                    isCashTransaction: true
+                });
+
+                saveData();
+                viewCustomerProfile(customer.id); // Refresh modal
             }
         }
 
-        // View Customer Profile Modal
+        function withdrawCash() {
+            if(!currentViewedCustomer) return;
+            const amountStr = prompt("Enter amount given back to customer (Refund/Withdrawal):");
+            if(amountStr && !isNaN(amountStr)) {
+                const amount = parseFloat(amountStr);
+                const customer = data.customers.find(c => c.id == currentViewedCustomer);
+                
+                customer.pendingDues += amount; // Increases what they owe (or lowers advance)
+                
+                // Log it to history
+                data.sales.push({ 
+                    id: Date.now(), batchId: null, customerId: customer.id, 
+                    type: 'Withdrawal (Given)', kg: 0, totalBill: 0, paid: -amount, 
+                    resultingBalance: customer.pendingDues,
+                    isCashTransaction: true
+                });
+
+                saveData();
+                viewCustomerProfile(customer.id); // Refresh modal
+            }
+        }
+
         function viewCustomerProfile(customerId) {
-            currentViewedCustomer = customerId; // Save for printing
+            currentViewedCustomer = customerId;
             const customer = data.customers.find(c => c.id == customerId);
             if(!customer) return;
 
             document.getElementById('modal-c-name').innerText = customer.name;
             document.getElementById('modal-c-type').innerText = customer.type;
             document.getElementById('modal-c-phone').innerText = customer.phone;
-            document.getElementById('modal-c-address').innerText = customer.address || 'No address provided';
-            
+            document.getElementById('modal-c-address').innerText = customer.address || 'N/A';
             document.getElementById('modal-c-value').innerText = `₹${customer.lifetimeValue.toFixed(2)}`;
-            document.getElementById('modal-c-pending').innerText = `₹${customer.pendingDues.toFixed(2)}`;
+
+            // Wallet Balance Styling
+            const balBox = document.getElementById('modal-balance-box');
+            const balLabel = document.getElementById('modal-balance-label');
+            const balAmt = document.getElementById('modal-c-pending');
+            
+            if (customer.pendingDues > 0) {
+                balBox.className = 'bg-red-50 p-4 rounded-lg border border-red-200 shadow-inner';
+                balLabel.className = 'text-xs text-red-700 uppercase font-semibold';
+                balLabel.innerText = 'Pending Dues (Owes You)';
+                balAmt.className = 'font-extrabold text-xl text-red-700 mt-1';
+                balAmt.innerText = `₹${customer.pendingDues.toFixed(2)}`;
+            } else if (customer.pendingDues < 0) {
+                balBox.className = 'bg-green-50 p-4 rounded-lg border border-green-200 shadow-inner';
+                balLabel.className = 'text-xs text-green-700 uppercase font-semibold';
+                balLabel.innerText = 'Advance Balance (You Owe)';
+                balAmt.className = 'font-extrabold text-xl text-green-700 mt-1';
+                balAmt.innerText = `₹${Math.abs(customer.pendingDues).toFixed(2)}`;
+            } else {
+                balBox.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
+                balLabel.className = 'text-xs text-gray-700 uppercase font-semibold';
+                balLabel.innerText = 'Ledger Cleared';
+                balAmt.className = 'font-extrabold text-xl text-gray-700 mt-1';
+                balAmt.innerText = `₹0.00`;
+            }
 
             let totalKg = 0, bigKg = 0, smallKg = 0, totalCostOfGoods = 0;
-            const customerSales = data.sales.filter(s => s.customerId == customerId);
+            const customerHistory = data.sales.filter(s => s.customerId == customerId);
             
-            customerSales.forEach(s => {
-                totalKg += s.kg;
-                if(s.type === 'big') bigKg += s.kg;
-                if(s.type === 'small') smallKg += s.kg;
+            customerHistory.forEach(s => {
+                if(!s.isCashTransaction) {
+                    totalKg += s.kg;
+                    if(s.type === 'big') bigKg += s.kg;
+                    if(s.type === 'small') smallKg += s.kg;
 
-                const batch = data.batches.find(b => b.id == s.batchId);
-                if(batch && batch.landedCost > 0) {
-                    const baseTotalKg = batch.initialTotalKg || (batch.bigKg + batch.smallKg + s.kg); 
-                    if(baseTotalKg > 0) {
-                        const costPerKg = batch.landedCost / baseTotalKg;
-                        totalCostOfGoods += (costPerKg * s.kg);
+                    const batch = data.batches.find(b => b.id == s.batchId);
+                    if(batch && batch.landedCost > 0) {
+                        const baseTotalKg = batch.initialTotalKg || (batch.bigKg + batch.smallKg + s.kg); 
+                        if(baseTotalKg > 0) {
+                            const costPerKg = batch.landedCost / baseTotalKg;
+                            totalCostOfGoods += (costPerKg * s.kg);
+                        }
                     }
                 }
             });
@@ -434,53 +500,62 @@
             if(customer.lifetimeValue > 0 && totalCostOfGoods > 0) {
                 const profit = customer.lifetimeValue - totalCostOfGoods;
                 const marginPercentage = (profit / customer.lifetimeValue) * 100;
-                
                 marginEl.innerText = `${marginPercentage.toFixed(1)}%`;
                 if(marginPercentage >= 0) {
                     marginBox.className = 'bg-green-50 p-4 rounded-lg border border-green-200';
-                    marginLabel.className = 'text-xs text-green-700 uppercase font-semibold';
-                    marginEl.className = 'font-extrabold text-xl text-green-700 mt-1';
-                    marginLabel.innerText = 'Value (Profit Margin)';
+                    marginLabel.className = 'text-xs text-green-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-green-700 mt-1'; marginLabel.innerText = 'Value (Profit Margin)';
                 } else {
                     marginBox.className = 'bg-red-50 p-4 rounded-lg border border-red-200 shadow-inner';
-                    marginLabel.className = 'text-xs text-red-700 uppercase font-semibold';
-                    marginEl.className = 'font-extrabold text-xl text-red-700 mt-1';
-                    marginLabel.innerText = 'Loss (Negative Margin)';
+                    marginLabel.className = 'text-xs text-red-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-red-700 mt-1'; marginLabel.innerText = 'Loss (Negative Margin)';
                 }
             } else {
                 marginEl.innerText = `N/A`;
-                marginBox.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
-                marginLabel.className = 'text-xs text-gray-700 uppercase font-semibold';
-                marginEl.className = 'font-extrabold text-xl text-gray-700 mt-1';
-                marginLabel.innerText = 'Profitability';
+                marginBox.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200'; marginLabel.className = 'text-xs text-gray-700 uppercase font-semibold'; marginEl.className = 'font-extrabold text-xl text-gray-700 mt-1'; marginLabel.innerText = 'Profitability';
             }
 
             const transList = document.getElementById('modal-transaction-list');
             transList.innerHTML = '';
             
-            if(customerSales.length === 0) {
-                transList.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500 italic">No purchase history found for this customer.</td></tr>';
+            if(customerHistory.length === 0) {
+                transList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">No purchase history found for this customer.</td></tr>';
             } else {
-                customerSales.sort((a, b) => b.id - a.id).forEach(s => {
+                customerHistory.sort((a, b) => b.id - a.id).forEach(s => {
                     const d = new Date(s.id);
                     const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
-                    transList.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="p-3 text-sm whitespace-nowrap">${dateStr}</td>
-                            <td class="p-3 text-sm capitalize font-semibold ${s.type === 'big' ? 'text-blue-600' : 'text-purple-600'}">${s.type}</td>
-                            <td class="p-3 text-sm">${s.kg} kg</td>
-                            <td class="p-3 text-sm font-bold">₹${s.totalBill.toFixed(2)}</td>
-                            <td class="p-3 text-sm text-green-600">₹${s.paid.toFixed(2)}</td>
-                            <td class="p-3 text-sm text-red-600 font-bold">₹${s.pending.toFixed(2)}</td>
-                            <td class="p-3 text-center no-print">
-                                <button onclick="printSingleInvoice(${s.id})" class="text-blue-600 hover:text-blue-800 text-sm border border-blue-300 bg-blue-50 px-2 py-1 rounded">Print</button>
-                            </td>
-                        </tr>
-                    `;
+                    let ledgerFmt = '';
+                    if (s.resultingBalance > 0) ledgerFmt = `<span class="text-red-600 font-bold">Owes: ₹${s.resultingBalance.toFixed(2)}</span>`;
+                    else if (s.resultingBalance < 0) ledgerFmt = `<span class="text-green-600 font-bold">Adv: ₹${Math.abs(s.resultingBalance).toFixed(2)}</span>`;
+                    else ledgerFmt = `<span class="text-gray-500 font-bold">₹0.00</span>`;
+
+                    if(s.isCashTransaction) {
+                        const isDeposit = s.paid > 0;
+                        transList.innerHTML += `
+                            <tr class="bg-blue-50 border-b border-blue-100">
+                                <td class="p-3 text-sm whitespace-nowrap text-blue-800">${dateStr}</td>
+                                <td class="p-3 text-sm font-bold text-blue-800">${s.type}</td>
+                                <td class="p-3 text-sm text-blue-800">-</td>
+                                <td class="p-3 text-sm font-bold ${isDeposit ? 'text-green-600' : 'text-red-600'}">${isDeposit ? '+' : '-'} ₹${Math.abs(s.paid).toFixed(2)}</td>
+                                <td class="p-3 text-sm text-right">${ledgerFmt}</td>
+                                <td class="p-3 text-center no-print">-</td>
+                            </tr>
+                        `;
+                    } else {
+                        transList.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition border-b">
+                                <td class="p-3 text-sm whitespace-nowrap">${dateStr}</td>
+                                <td class="p-3 text-sm capitalize font-semibold ${s.type === 'big' ? 'text-blue-600' : 'text-purple-600'}">${s.type} Sale</td>
+                                <td class="p-3 text-sm">${s.kg} kg</td>
+                                <td class="p-3 text-sm font-bold text-gray-700">₹${s.totalBill.toFixed(2)}</td>
+                                <td class="p-3 text-sm text-right">${ledgerFmt}</td>
+                                <td class="p-3 text-center no-print">
+                                    <button onclick="printSingleInvoice(${s.id})" class="text-blue-600 hover:text-blue-800 text-xs border border-blue-300 bg-white px-2 py-1 rounded">Invoice</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 });
             }
-
             document.getElementById('customer-modal').classList.remove('hidden');
         }
 
@@ -489,92 +564,67 @@
             currentViewedCustomer = null;
         }
 
-        // --- NEW PRINTING FUNCTIONS ---
-
-        // 1. Print a Single Transaction Invoice
         function printSingleInvoice(saleId) {
             const sale = data.sales.find(s => s.id == saleId);
+            if(!sale || sale.isCashTransaction) return;
             const customer = data.customers.find(c => c.id == sale.customerId);
             const dateStr = new Date(sale.id).toLocaleString();
 
+            let ledgerStr = '';
+            if(customer.pendingDues > 0) ledgerStr = `Total Outstanding Dues: <span style="color:red;">₹${customer.pendingDues.toFixed(2)}</span>`;
+            else if(customer.pendingDues < 0) ledgerStr = `Total Advance Balance: <span style="color:green;">₹${Math.abs(customer.pendingDues).toFixed(2)}</span>`;
+            else ledgerStr = `Ledger Balance: ₹0.00`;
+
             const printWindow = window.open('', '', 'width=800,height=600');
             printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Invoice - ${customer.name}</title>
+                <html><head><title>Invoice - ${customer.name}</title>
                     <style>
                         body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
                         h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
                         .info-box { margin-bottom: 30px; line-height: 1.6; }
-                        table { w-full; width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
                         th { background-color: #f8f9fa; }
-                        .totals { margin-top: 30px; font-size: 1.1em; }
-                        .text-right { text-align: right; }
+                        .totals { margin-top: 30px; font-size: 1.1em; text-align: right; }
                         .bold { font-weight: bold; }
                     </style>
-                </head>
-                <body>
+                </head><body>
                     <h1>POULTRY HUB - SALE INVOICE</h1>
-                    
                     <div class="info-box">
                         <p><strong>Date:</strong> ${dateStr}</p>
                         <p><strong>Customer Name:</strong> ${customer.name}</p>
                         <p><strong>Phone:</strong> ${customer.phone}</p>
-                        <p><strong>Address:</strong> ${customer.address || 'N/A'}</p>
                     </div>
-
                     <table>
-                        <thead>
-                            <tr>
-                                <th>Item Description</th>
-                                <th>Weight (Kg)</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="text-transform: capitalize;">${sale.type} Chicken</td>
-                                <td>${sale.kg}</td>
-                                <td>₹${sale.totalBill.toFixed(2)}</td>
-                            </tr>
-                        </tbody>
+                        <thead><tr><th>Item Description</th><th>Weight (Kg)</th><th>Amount</th></tr></thead>
+                        <tbody><tr><td style="text-transform: capitalize;">${sale.type} Chicken</td><td>${sale.kg}</td><td>₹${sale.totalBill.toFixed(2)}</td></tr></tbody>
                     </table>
-
-                    <div class="totals text-right">
+                    <div class="totals">
                         <p>Total Bill: <span class="bold">₹${sale.totalBill.toFixed(2)}</span></p>
-                        <p>Amount Paid On Spot: <span class="bold" style="color: green;">₹${sale.paid.toFixed(2)}</span></p>
-                        <hr style="width: 30%; float: right; border: 1px solid #ccc;">
-                        <div style="clear:both;"></div>
-                        <p>Pending Dues From This Bill: <span class="bold" style="color: red;">₹${sale.pending.toFixed(2)}</span></p>
-                        <br>
-                        <p><strong>Total Outstanding Ledger Balance: ₹${customer.pendingDues.toFixed(2)}</strong></p>
+                        <p>Paid On Spot: <span class="bold" style="color: green;">₹${sale.paid.toFixed(2)}</span></p>
+                        <hr style="width: 30%; float: right; border: 1px solid #ccc;"><div style="clear:both;"></div>
+                        <br><p><strong>${ledgerStr}</strong></p>
                     </div>
-                    
                     <p style="margin-top: 50px; text-align: center; color: #777;">Thank you for your business!</p>
-                </body>
-                </html>
+                </body></html>
             `);
             printWindow.document.close();
-            setTimeout(() => printWindow.print(), 250); // Small delay to let styles load
+            setTimeout(() => printWindow.print(), 250);
         }
 
-        // 2. Print Full Customer Ledger (Works automatically via CSS, just triggers standard print)
-        function printCustomerLedger() {
-            window.print();
-        }
+        function printCustomerLedger() { window.print(); }
 
-        // Update UI Elements
         function updateUI() {
             let totalBig = 0, totalSmall = 0, totalCash = 0, totalPending = 0;
             
-            data.batches.forEach(b => {
-                totalBig += b.bigKg;
-                totalSmall += b.smallKg;
-            });
+            data.batches.forEach(b => { totalBig += b.bigKg; totalSmall += b.smallKg; });
             
-            data.sales.forEach(s => totalCash += s.paid);
-            data.customers.forEach(c => totalPending += c.pendingDues);
+            // Only sum up actual sales cash for the daily dashboard, ignore wallet deposits to prevent confusion
+            data.sales.forEach(s => { if(!s.isCashTransaction) totalCash += s.paid; });
+            
+            data.customers.forEach(c => { 
+                if(c.pendingDues > 0) totalPending += c.pendingDues; // Only sum positive debts for market outstanding
+            });
 
             document.getElementById('dash-big-stock').innerText = totalBig.toFixed(2) + ' Kg';
             document.getElementById('dash-small-stock').innerText = totalSmall.toFixed(2) + ' Kg';
@@ -586,27 +636,30 @@
             data.batches.forEach(b => {
                 const profitLoss = b.revenueGenerated - b.landedCost;
                 const statusColor = profitLoss >= 0 ? 'text-green-600' : 'text-red-600';
-                const statusText = profitLoss >= 0 ? `+₹${profitLoss.toFixed(2)}` : `-₹${Math.abs(profitLoss).toFixed(2)}`;
                 dashBatches.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-semibold">${b.vendor}</td>
                         <td class="p-4">₹${b.landedCost.toFixed(2)}</td>
                         <td class="p-4">₹${b.revenueGenerated.toFixed(2)}</td>
-                        <td class="p-4 font-bold ${statusColor} bg-white">${statusText}</td>
+                        <td class="p-4 font-bold ${statusColor}">₹${profitLoss.toFixed(2)}</td>
                     </tr>`;
             });
 
             const custList = document.getElementById('customer-list');
             custList.innerHTML = '';
             data.customers.forEach(c => {
+                let statusBadge = '';
+                if(c.pendingDues > 0) statusBadge = `<span class="text-red-600 font-extrabold">Owes: ₹${c.pendingDues.toFixed(2)}</span>`;
+                else if(c.pendingDues < 0) statusBadge = `<span class="text-green-600 font-extrabold">Advance: ₹${Math.abs(c.pendingDues).toFixed(2)}</span>`;
+                else statusBadge = `<span class="text-gray-500 font-bold">₹0.00</span>`;
+
                 custList.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-bold text-gray-800">${c.name}</td>
                         <td class="p-4 text-sm text-gray-500">${c.type}</td>
-                        <td class="p-4 text-red-600 font-extrabold text-right">₹${c.pendingDues.toFixed(2)}</td>
-                        <td class="p-4 flex justify-center space-x-3 no-print">
-                            <button onclick="viewCustomerProfile(${c.id})" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded font-semibold transition border border-indigo-200">View Profile</button>
-                            <button onclick="settleDues(${c.id})" class="text-green-600 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded font-semibold transition border border-green-200">Collect Cash</button>
+                        <td class="p-4 text-right">${statusBadge}</td>
+                        <td class="p-4 flex justify-center no-print">
+                            <button onclick="viewCustomerProfile(${c.id})" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded font-bold transition border border-indigo-200 shadow-sm">Open Ledger</button>
                         </td>
                     </tr>`;
             });
@@ -624,7 +677,6 @@
             });
         }
 
-        // Initialize
         updateUI();
     </script>
 </body>
